@@ -163,7 +163,6 @@ class LuaAutoComplete(sublime_plugin.EventListener):
                 for item in mat:
                     pos = locations[0]
                     if pos >= item.start() and pos <= item.end():
-                        print("wqeqweqwe", item.group(1))
                         cls = self.iterMemberClass(valArr, item.group(1))
                         self.appendMember(cls, memList)
                         break
