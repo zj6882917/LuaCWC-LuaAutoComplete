@@ -11,7 +11,7 @@ except ImportError:
 class BuildDefinition:
 
     def __init__(self):
-        self.dir = sublime.packages_path() + "/User/LuaComplete/"
+        self.dir = sublime.packages_path() + "/User/LuaCWC.cache/"
         self.path = self.dir + "definition.json"
         self.defi = {}
 

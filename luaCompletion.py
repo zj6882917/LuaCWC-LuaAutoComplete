@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 import re
+import time
 
 try:
     import buildDefinition
@@ -22,6 +23,10 @@ def init():
     for key, val in builder.defi.items():
         cache[key] = val
 
+def getAutoBuildPath():
+    settings = utils.loadSettings("LuaCWC")
+    auto_build_path = settings.get("auto_build_path", "")
+    return auto_build_path
 
 class LuaBuildDefinitionCommand(sublime_plugin.TextCommand):
 
@@ -57,6 +62,9 @@ class LuaAutoCompleteCommand(sublime_plugin.TextCommand):
 
 class LuaAutoComplete(sublime_plugin.EventListener):
 
+    def __init__(self):
+        self.lastTime=0
+
     def appendMember(self, clsName, lst):
         global cache
 
@@ -68,8 +76,12 @@ class LuaAutoComplete(sublime_plugin.EventListener):
                     if key == "::super":
                         sup = val
                     continue
-                if "ctor" in key:
+                ma = re.match("^ctor(\(.*\))", key)
+                if ma != None:
+                    newFunc = "New" + ma.group(1)
+                    lst.append((newFunc + "\t" + clsName + "-" + "func", newFunc))
                     continue
+
                 lst.append((key + "\t" + clsName +
                             "-" + val.split(":")[0], key))
 
@@ -113,6 +125,21 @@ class LuaAutoComplete(sublime_plugin.EventListener):
 
         return None
 
+    def on_post_save(self, view):
+        curTime = time.time()
+        if curTime - self.lastTime<2:
+            return
+
+        auto_build_path = getAutoBuildPath()
+
+        if len(auto_build_path) <= 0:
+            return
+
+        if not utils.isLuaFile(view.file_name()):
+            return
+
+        view.run_command("lua_build_definition", {"dirs":[auto_build_path]})
+
     def on_query_completions(self, view, prefix, locations):
         global cache
 
@@ -127,6 +154,19 @@ class LuaAutoComplete(sublime_plugin.EventListener):
             if valArr[0] in cache:
                 cls = self.iterMemberClass(valArr, valArr[0])
                 self.appendMember(cls, memList)
+            elif valArr[0] == "self":
+                content = view.substr(sublime.Region(0, view.size()))
+
+                # function block
+                mat = re.finditer(
+                        "^function\s+([\w\d]+)[\:\.]([\w\d]+\s*\(.*\))(.*)$(?:\n+.+){1,}?\nend", content, re.MULTILINE)
+                for item in mat:
+                    pos = locations[0]
+                    if pos >= item.start() and pos <= item.end():
+                        print("wqeqweqwe", item.group(1))
+                        cls = self.iterMemberClass(valArr, item.group(1))
+                        self.appendMember(cls, memList)
+                        break
             else:
                 content = view.substr(sublime.Region(0, view.size()))
                 match = re.search(

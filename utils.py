@@ -29,3 +29,6 @@ def findValues(prefix, strg):
 
 def isST3():
     return sublime.version()[0] == '3'
+
+def loadSettings(name):
+    return sublime.load_settings(name+".sublime-settings")
