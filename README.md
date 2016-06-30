@@ -2,6 +2,7 @@
 
 A SublimeText plugin which auto completes lua code implements Lua object-oriented.
 
+# Usage
 You should add the function below to define a class defined function:
 
 	function class(classname, super)
@@ -81,7 +82,7 @@ Now instances the object:
 
 If you types "obj.", this plugin will find the corresponding class and show its members (property1, property2).
 
-<br /><br /><br />
+#Additional Usage
 
 Sometime plugin cannot identify the class of the object because of intricate parameter passing.There are some syntax to solve this problem.
 
