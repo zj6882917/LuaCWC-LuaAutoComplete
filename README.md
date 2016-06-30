@@ -67,7 +67,7 @@ You should add the function below to define a class defined function:
 	    return cls
 	end
 
-then you can define a class:
+Then you can define a class:
 
 	ClassName = class("ClassName",
 	{
@@ -76,8 +76,20 @@ then you can define a class:
 	})
 
 
-now instances the object:
+Now instances the object:
 'local obj = ClassName.New()'
 
-if you input "obj.", this plugin will find the corresponding class and show its member (property1, property2)
+If you types "obj.", this plugin will find the corresponding class and show its members (property1, property2).
 
+Sometime plugin cannot identify the class of the object because of intricate parameter passing.There are some syntax to solve this problem.
+
+	local obj = parameter --[type:ClassName]
+types "obj." you can see the list of completion at the sublime text editor cantain its members.
+
+	function ClassOther:ClassFunc() --[return:ClassName]
+		return something
+	end
+	
+	local classOther = ClassOther.New()
+	local className = classOther:ClassFunc()
+types "className." you can see the list of ClassName members too because ClassOther:ClassFunc() defines ClassName as return Class.
