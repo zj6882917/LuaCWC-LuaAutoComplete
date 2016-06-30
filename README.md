@@ -81,8 +81,7 @@ Now instances the object:
 
 If you types "obj.", this plugin will find the corresponding class and show its members (property1, property2).
 
-
-
+<br /><br /><br />
 
 Sometime plugin cannot identify the class of the object because of intricate parameter passing.There are some syntax to solve this problem.
 
