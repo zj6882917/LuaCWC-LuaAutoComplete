@@ -43,8 +43,10 @@ class BuildDefinition:
         #   val = valCls
         # }
         # like
+        # mat = re.finditer(
+        #     "^(?:local\s*){0,}([\w\d]+)\s*=\s*class.+,\s*\n*\{(\n+[^\}]*){1,}\}\)", strg, re.MULTILINE)
         mat = re.finditer(
-            "^(?:local\s*){0,}([\w\d]+)\s*=\s*class.+,\s*\n*\{(\n+[^\}]*){1,}\}\)", strg, re.MULTILINE)
+            "^(?:local\s*){0,}([\w\d]+)\s*=\s*class.+,\s*\n*\{((?:\n.*?){1,})\}\)", strg, re.MULTILINE)
 
         for item in mat:
             cls = item.group(1)
