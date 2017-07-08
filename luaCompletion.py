@@ -65,7 +65,7 @@ class LuaAutoComplete(sublime_plugin.EventListener):
     def __init__(self):
         self.lastTime=0
 
-    def appendMember(self, clsName, lst):
+    def appendMember(self, clsName, havenew, point, lst):
         global cache
 
         if clsName != None and clsName in cache:
@@ -76,17 +76,24 @@ class LuaAutoComplete(sublime_plugin.EventListener):
                     if key == "::super":
                         sup = val
                     continue
-                ma = re.match("^ctor(\(.*\))", key)
+                ma = re.match("^Ctor(\(.*\))", key)
                 if ma != None:
-                    newFunc = "New" + ma.group(1)
-                    lst.append((newFunc + "\t" + clsName + "-" + "func", newFunc))
+                    if havenew:
+                        newFunc = "New" + ma.group(1)
+                        lst.append((newFunc + "\t" + clsName + "-" + "func", newFunc))
+                    continue
+
+                _type = val.split(":")[0]
+                if _type == "func" and point == ".":
+                    continue
+                if _type == "val" and point == ":":
                     continue
 
                 lst.append((key + "\t" + clsName +
-                            "-" + val.split(":")[0], key))
+                            "-" + _type, key))
 
             if sup != None:
-                self.appendMember(sup, lst)
+                self.appendMember(sup, havenew, point, lst)
 
     def iterMemberClass(self, valArr, firstCls):
         global cache
@@ -145,18 +152,18 @@ class LuaAutoComplete(sublime_plugin.EventListener):
 
         line = view.substr(sublime.Region(
             view.line(locations[0]).begin(), locations[0]))
-        match = re.search("([\w\d\.]+)[\.\:]$", line)
+        match = re.search("([\w\d\.]+)([\.\:])$", line)
         
         if match != None:
             memList = []
             val = match.group(1)
+            point = match.group(2)
             valArr = val.split(".")
             if valArr[0] in cache:
                 cls = self.iterMemberClass(valArr, valArr[0])
-                self.appendMember(cls, memList)
+                self.appendMember(cls, True, point, memList)
             elif valArr[0] == "self":
                 content = view.substr(sublime.Region(0, view.size()))
-
                 # function block
                 mat = re.finditer(
                         "^function\s+([\w\d]+)[\:\.]([\w\d]+\s*\(.*\))(.*)$(?:\n+.+){1,}?\nend", content, re.MULTILINE)
@@ -164,7 +171,7 @@ class LuaAutoComplete(sublime_plugin.EventListener):
                     pos = locations[0]
                     if pos >= item.start() and pos <= item.end():
                         cls = self.iterMemberClass(valArr, item.group(1))
-                        self.appendMember(cls, memList)
+                        self.appendMember(cls, False, point, memList)
                         break
             else:
                 content = view.substr(sublime.Region(0, view.size()))
@@ -177,14 +184,14 @@ class LuaAutoComplete(sublime_plugin.EventListener):
                     # mark Cls.New()
                     if matCls != None:
                         cls = self.iterMemberClass(valArr, matCls.group(1))
-                        self.appendMember(cls, memList)
+                        self.appendMember(cls, True, point, memList)
 
                     # mark val--[type:ClsName]
                     else:
                         matCls = re.search(".+\[type:([\w\d].+)\]", match.group(1))
                         if matCls != None:
                             cls = self.iterMemberClass(valArr, matCls.group(1))
-                            self.appendMember(cls, memList)
+                            self.appendMember(cls, True, point, memList)
                         # mark Func()--[crt:ClsName]
                         else:
                             matFunc = re.search(
@@ -225,7 +232,7 @@ class LuaAutoComplete(sublime_plugin.EventListener):
                                 # like ConfigManager.avatar, ConfigManager is class
                                 if valArr[0] in cache:
                                     cls = self.iterMemberClass(valArr, valArr[0])
-                                    self.appendMember(cls, memList)
+                                    self.appendMember(cls, True, point, memList)
                                 else:  # TODO : support var by recur
                                     pass
 
